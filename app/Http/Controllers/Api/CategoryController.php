@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Category;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Resources\CategoryResource;
 
 class CategoryController extends Controller
 {
@@ -16,7 +17,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories=Category::all();
-        return $categories;
+        return CategoryResource::collection($categories);
     }
 
     /**
@@ -25,10 +26,36 @@ class CategoryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    
+   public function store(Request $request)
     {
-        //
+        $request->validate([
+        'name' => 'required|string',
+        'photo' => 'required|mimes:jpeg,bmp,png',
+        ]);
+
+         //File Upload
+        $imageName = time().'.'.$request->photo->extension(); 
+         
+        $request->photo->move(public_path('backendtemplate/categoryimg'), 
+            $imageName);
+
+        $myfile='backendtemplate/categoryimg/'.$imageName;
+
+
+        //Store Data
+          $category=new Category;
+          $category->name=$request->name;
+          $category->photo=$myfile;
+          
+
+          $category->save();
+
+
+        //Redirect
+          return new CategoryResource($category);
     }
+
 
     /**
      * Display the specified resource.
@@ -38,7 +65,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        return $category;
+        return new CategoryResource($category);
     }
 
     /**
