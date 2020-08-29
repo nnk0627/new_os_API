@@ -7,11 +7,12 @@ use App\Item;
 use Illuminate\Http\Request;
 use App\Http\Resources\ItemResource;
 
+
 class ItemController extends Controller
 {
     public function __construct($value='')
     {
-        $this->middleware('auth:api')->except('index');
+        $this->middleware('auth:api')->except('index','filter','search');
     }
     /**
      * Display a listing of the resource.
@@ -107,4 +108,70 @@ class ItemController extends Controller
     {
         //
     }
+    public function filter($sid,$bid)
+    {
+        $items=array();
+        if($sid && $bid){
+            $items=Item::where('subcategory_id',$sid)
+            ->where('brand_id',$bid)->get();
+
+        }else {
+            $items=Item::where('subcategory_id',$sid)->
+            or_where('brand_id',$bid)->get();
+        }
+        return $items;
+        
+    }
+      public function search(Request $request) {
+        $name = $request->get('name');
+        $sid=$request->get('subcategory');
+        $bid=$request->get('brand');
+        $search=array();
+
+   if($name || $sid || $bid)    //if do one of the conditions
+   {    
+
+        if($name && $sid && $bid)    //if all conditions do
+        {
+            $search = Item::where('subcategory_id',$sid)
+            ->where('brand_id',$bid)
+            ->where('name', 'like', "%{$name}%")->get();
+        }
+
+        else if($name && $sid)      //if name and subcategory include
+        {
+            $search=Item::where('subcategory_id',$sid)
+            ->where('name', 'like', "%{$name}%")->get();
+        }
+
+        else if($name && $bid)      //if name and brand contain
+        {
+            $search=Item::where('brand_id',$bid)
+            ->where('name', 'like', "%{$name}%")->get();
+        }
+
+        else if($sid && $bid)       //if subcategory and brand exist
+        {          
+            $search=Item::where('subcategory_id',$sid)
+            ->where('brand_id',$bid)->get();
+        }
+        else if($sid || $bid)      //if subcategory or brand
+        {
+            $search=Item::where('subcategory_id',$sid)
+            ->orWhere('brand_id',$bid)->get();
+
+        }
+        else           //if subcategory or name
+        {
+           $search=Item::where('subcategory_id',$sid)
+           ->orWhere('name', 'like', "%{$name}%")->get();
+        }
+
+}else           //if no display all items
+{
+    $search=Item::all();
+}
+return $search;
+}
+
 }

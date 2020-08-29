@@ -33,9 +33,11 @@ class UserController extends Controller
         $user->name=$request->name;
         $user->email=$request->email;
         $user->password=Hash::make($request->password);
-        $user->emai_verified_at=now();
-        $user->remember_token=Str::ramdom(10);
+        $user->email_verified_at=now();
+        $user->remember_token=Str::random(10);
         $user->save();
+
+        return $user;
 
     }
 
